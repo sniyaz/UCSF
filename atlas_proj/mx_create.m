@@ -21,7 +21,7 @@ end
 
 function [ssd] = SSD(target_image, atlas_image_a, atlas_image_b, x, y, radius)
 
-    sum = 0
+    sum = 0;
     
     for i = x-radius:x+radius
         for j = y-radius:y+radius
