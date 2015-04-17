@@ -28,13 +28,22 @@ function [out] = test()
     %atlas_seg{4} = seg4
     %atlas_seg{5} = seg5
     
-    
-    
+    %A crappy attempt at making our consensus matrix into a binary map!
     test_output = consensus(target, atlas_images, atlas_seg);
+    for i = 1:length(test_output, 2)
+        for j = 1:length(test_output, 1)
+            if test_output(i, j) > 0.5
+                test_output(i, j) = 1
+            else
+                test_output(i, j) = 0
+            end
+        end
+    end
     
     
     
-    target(~seg1) = 0
+    
+    target(~test_output) = 0
     image(target)
 end
 
