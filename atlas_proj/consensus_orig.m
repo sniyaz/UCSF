@@ -1,4 +1,4 @@
-function [consensus_matrix] = consensus(target_image, label, image_cell, seg_cell)
+function [consensus_matrix] = consensus(target_image, image_cell, seg_cell)
 
     consensus_matrix = []    
     atlas_num = size(image_cell, 2)

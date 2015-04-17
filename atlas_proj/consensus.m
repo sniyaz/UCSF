@@ -12,13 +12,13 @@ function [consensus_matrix] = consensus(target_image, image_cell, seg_cell)
 
     for x = lower_x:upper_x
         for y = lower_y:upper_y
-            mx = mx_create(target_image, image_cell, x, y)
-            weights = mx_to_weights(mx)
-            atlas_points = []
+            mx = mx_create(target_image, image_cell, x, y);
+            weights = mx_to_weights(mx);
+            atlas_points = [];
             for i = 1:atlas_num
-                atlas_points(i) = seg_cell{i}(x, y)
+                atlas_points(i) = seg_cell{i}(x, y);
             end
-            consensus_matrix(x, y) = atlas_points*weights
+            consensus_matrix(x, y) = atlas_points*weights;
         end
     end 
 
