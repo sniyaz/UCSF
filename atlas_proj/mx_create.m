@@ -4,7 +4,7 @@ function [mx] = mx_create(target_image, atlas_image_cell, x, y)
 
     mx = zeros(num_atlases, num_atlases);
  
-    radius = 10;
+    radius = 5;
     
     for i = 1:num_atlases
         for j = 1:num_atlases
