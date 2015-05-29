@@ -26,9 +26,13 @@ function [out] = test()
     %atlas_seg{4} = seg4;
     %atlas_seg{5} = seg5;
     
+    
+    
+    
     %A crappy attempt at making our consensus matrix into a binary map!
     %Soon to be replaced with Bayesian Classifier! 
     test_output = consensus(target, atlas_images, atlas_seg);
+        
     for i = 1:size(test_output, 2)
         for j = 1:size(test_output, 1)
             if test_output(j, i) > 0.5
