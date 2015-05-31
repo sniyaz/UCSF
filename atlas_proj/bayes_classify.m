@@ -1,7 +1,8 @@
 function [label] = bayes_classify(target_image, consensus_matrix, x, y, radius)
 
     
-    consensus_matrix = dlmread('test_consensus_mat.txt');
+    %This line might be causing thrashing....
+    %consensus_matrix = dlmread('test_consensus_mat.txt');
     
     %Note that we maximize the log of probabilities in this classifier, an effort to prevent underflow.
     
@@ -9,8 +10,8 @@ function [label] = bayes_classify(target_image, consensus_matrix, x, y, radius)
 
     %Enter the name of every bayesian helper function used into the array
     %Aka the functions used to calculuate each "dimension" of a certain voxel.
-    dimensions_arr = cell(1, 1)
-    dimensions_arr{1} = 'intensity_bayes_helper'
+    dimensions_arr = cell(1, 1);
+    dimensions_arr{1} = 'intensity_bayes_helper';
     
     
     in_distribution = [];
@@ -27,7 +28,7 @@ function [label] = bayes_classify(target_image, consensus_matrix, x, y, radius)
         %Laplace Smoothing to prevent zero probabilities killing us
         smoothing_constant = (1)/((sum(in_distribution) + sum(out_distribution))/2);
         
-        prob_matrix_contribution = []
+        prob_matrix_contribution = [];
         target_voxel_value = current_dim_func(x, y, radius, target_image);
         prob_matrix_contribution(1) = log((in_distribution(target_voxel_value))/(sum(in_distribution)) + smoothing_constant);
         prob_matrix_contribution(2) = log((out_distribution(target_voxel_value))/(sum(out_distribution)) + smoothing_constant);

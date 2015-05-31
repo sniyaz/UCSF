@@ -19,9 +19,10 @@ function [mx] = mx_create(target_image, atlas_image_cell, x, y)
 end
 
 
-function [ssd] = SSD(target_image, atlas_image_a, atlas_image_b, x, y, radius)
+function [out] = SSD(target_image, atlas_image_a, atlas_image_b, x, y, radius)
 
     sum = 0;
+    beta = 3;
     
     for i = x-radius:x+radius
         for j = y-radius:y+radius
@@ -32,7 +33,7 @@ function [ssd] = SSD(target_image, atlas_image_a, atlas_image_b, x, y, radius)
         end
     end
     
-    ssd = sum;
+    out = power(sum, beta);
     
     
 end

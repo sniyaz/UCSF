@@ -1,14 +1,14 @@
 function [out_prob_pair] = bayes_learning(radius, fun_str) 
 
     atlas_images = cell(1, 3)
-    atlas_images{1} = imread('test_data/knees/knee_1.jpg');
-    atlas_images{2} = imread('test_data/knees/knee_2.jpg');
-    atlas_images{3} = imread('test_data/knees/knee_3.jpg');
+    atlas_images{1} = imread('test_data/brains/brain_2.jpg');
+    atlas_images{2} = imread('test_data/brains/brain_3.jpg');
+    atlas_images{3} = imread('test_data/brains/brain_4.jpg');
     
     atlas_seg = cell(1, 3)
-    seg1 = dlmread('test_data/knees/knee_seg_1.txt') 
-    seg2 = dlmread('test_data/knees/knee_seg_2.txt')
-    seg3 = dlmread('test_data/knees/knee_seg_3.txt')
+    seg1 = dlmread('test_data/brains/brain_2_seg.txt') 
+    seg2 = dlmread('test_data/brains/brain_3_seg.txt')
+    seg3 = dlmread('test_data/brains/brain_4_seg.txt')
     atlas_seg{1} = seg1;
     atlas_seg{2} = seg2;
     atlas_seg{3} = seg3;

@@ -1,18 +1,18 @@
 function [out] = test()
     
-    target = imread('test_data/knees/knee_1.jpg')
-    seg1 = dlmread('test_data/knees/knee_seg_1.txt') 
-    seg2 = dlmread('test_data/knees/knee_seg_2.txt')
-    seg3 = dlmread('test_data/knees/knee_seg_3.txt')
+    target = imread('test_data/brains/brain_1.jpg')
+    seg1 = dlmread('test_data/brains/brain_2_seg.txt') 
+    seg2 = dlmread('test_data/brains/brain_3_seg.txt')
+    seg3 = dlmread('test_data/brains/brain_4_seg.txt')
     
     %seg4 = dlmread('test_data/ball_seg_4.txt')
     %seg5 = dlmread('test_data/ball_seg_5.txt')
     
     
     atlas_images = cell(1, 3)
-    atlas_images{1} = imread('test_data/knees/knee_1.jpg');
-    atlas_images{2} = imread('test_data/knees/knee_2.jpg');
-    atlas_images{3} = imread('test_data/knees/knee_3.jpg');
+    atlas_images{1} = imread('test_data/brains/brain_2.jpg');
+    atlas_images{2} = imread('test_data/brains/brain_3.jpg');
+    atlas_images{3} = imread('test_data/brains/brain_4.jpg');
     
     %atlas_images{4} = target;
     %atlas_images{5} = target;
@@ -32,6 +32,9 @@ function [out] = test()
     %A crappy attempt at making our consensus matrix into a binary map!
     %Soon to be replaced with Bayesian Classifier! 
     test_output = consensus(target, atlas_images, atlas_seg);
+    
+    %Save it?
+    dlmwrite('test_consensus_mat.txt', test_output)
         
     for i = 1:size(test_output, 2)
         for j = 1:size(test_output, 1)
