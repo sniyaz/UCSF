@@ -26,7 +26,7 @@ function [label] = bayes_classify(target_image, consensus_matrix, x, y, radius)
         in_distribution = dlmread(strcat('bayes_data/', current_dim, '_IN_data.txt'));
         out_distribution = dlmread(strcat('bayes_data/', current_dim, '_OUT_data.txt'));
         %Laplace Smoothing to prevent zero probabilities killing us
-        smoothing_constant = (1)/((sum(in_distribution) + sum(out_distribution))/2);
+        smoothing_constant = (0.0001)/((sum(in_distribution) + sum(out_distribution))/2);
         
         prob_matrix_contribution = [];
         target_voxel_value = current_dim_func(x, y, radius, target_image);

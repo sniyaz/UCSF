@@ -47,8 +47,7 @@ function [out] = test()
     end
     
     
-    
-    
     target(~test_output) = 0;
     imshow(target)
+    out = test_output
 end    
