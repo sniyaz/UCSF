@@ -1,9 +1,9 @@
 function [] = cluster_algo(radius)
 
-    target = imread('test_data/brains/brain_1.jpg');
-    binary_seg = dlmread('test_binary_seg.txt');
+    target = imread('test_data/brains/brain_1.jpg')
+    binary_seg = dlmread('test_binary_seg.txt')
     
-    im_cell = cell(size(target, 1), size(target, 2));
+    im_cell = cell(size(target, 1), size(target, 2))
     
     lower_x = radius + 1;
     upper_x = size(im_cell, 2) - radius;
@@ -13,13 +13,13 @@ function [] = cluster_algo(radius)
     
     for i = lower_x:upper_x
         for j = lower_y:upper_y
-            im_cell{j, i} = [j, i, target(j, i)];
+            im_cell{j, i} = [j, i, target(j, i)]
         end
     end
     
     
     
-    points = clustering(im_cell, 3, 0, 20);
+    points = clustering(im_cell, 3, 0, 20)
     
     for i = 1:size(points, 2)
         touched = 0
@@ -39,5 +39,7 @@ function [] = cluster_algo(radius)
     target(~binary_seg) = 0;
     imshow(target)                
                
+
+
 end
 

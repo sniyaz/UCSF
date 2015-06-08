@@ -46,6 +46,7 @@ function [out] = test()
         end
     end
     
+    dlmwrite('test_binary_seg.txt', test_output)
     
     target(~test_output) = 0;
     imshow(target)

@@ -60,7 +60,7 @@ function [centroid_points] = clustering(data_cell, dimension, radius, num_centro
         
         for i = num_centroids:-1:1
             if size(values_cell{i}, 1) == 0
-                centroids(i) = []; %if this centroid has no points assigned to it, we delete it outright...l
+                centroids(i) = []; %if this
                 centroid_points(i) = [];
                 num_centroids = num_centroids - 1
             elseif size(values_cell{i}, 1) == 1
