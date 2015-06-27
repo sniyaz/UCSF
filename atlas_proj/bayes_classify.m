@@ -1,14 +1,9 @@
 function [label] = bayes_classify(target_image, consensus_matrix, x, y, radius)
-
-    
-    %This line might be causing thrashing....
-    %consensus_matrix = dlmread('test_consensus_mat.txt');
-    
     %Note that we maximize the log of probabilities in this classifier, an effort to prevent underflow.
     
     conditional_prob_matrix = [];
 
-    %Enter the name of every bayesian helper function used into the array
+    %Enter the name of every bayesian helper function used into the cell array
     %Aka the functions used to calculuate each "dimension" of a certain voxel.
     dimensions_arr = cell(1, 1);
     dimensions_arr{1} = 'intensity_bayes_helper';

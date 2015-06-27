@@ -2,19 +2,9 @@
 %Who knows, it might just come in handy...
 function [centroid_points] = clustering(data_cell, dimension, num_centroids)
 
-    centroids = cell(1, num_centroids); %
+    centroids = kmeans_plus(data_cell, num_centroids); %
     centroid_points = cell(1, num_centroids); %
 
-    for i = 1:num_centroids
-        centroids{i}(1) = randi(367);
-        centroids{i}(2) = randi(367);
-        centroids{i}(3) = randi(256)*10000; %single pixel value
-        
-        %\centroid{i}(1) = randi(30) %which sector we belong to
-        %centroid{i}(2) = randi(256) %single pixel value
-        %centroid{i}(3) = randi(5000) %neighbor intensity sum
-    end
-  
     while true
         new_centroid_points = cell(1, num_centroids);
         values_cell = cell(1, num_centroids);
@@ -56,7 +46,7 @@ function [centroid_points] = clustering(data_cell, dimension, num_centroids)
             if size(values_cell{i}, 1) == 0
                 centroids{i}(1) = randi(367);
                 centroids{i}(2) = randi(367);
-                centroids{i}(3) = randi(256)*10000;
+                centroids{i}(3) = randi(256);
             elseif size(values_cell{i}, 1) == 1
                 centroids{i} = values_cell{i};
             else
@@ -74,37 +64,80 @@ end
 
 
 % A method so that we pick our inital clusters by the K Means++ algorithm!
-function [init_clusters] = kmeans_plus(data_cell, num_centroids, dimension, radius)
+function [init_clusters] = kmeans_plus(data_cell, num_centroids)
 
-    selected_centroids = []
+    %init_clusters is the thing that we actually returns out
+    %containing an n dimensional cell of data points that will be used as
+    %the ACTUAL cetroids in K Means. We build this list up as we go...
+    init_clusters = cell(1, 1)
 
     % random point picked as start centroid!
-    start_coords = random_start_point(data_cell, size(data_cell, 1), size(data_cell, 2))
-    init_clusters = cell(1, num_centroids)
-    init_clusters{1} = data_cell{start_coords(0) start_coords(1)}
-    selected_centroids = vertcat(selected_centroids, start_coords)
+    start_coords = random_start_point(data_cell, size(data_cell, 1), size(data_cell, 2)) 
+    init_clusters{1} = data_cell{start_coords(1), start_coords(2)}
     
     for i = 2:num_centroids
-        distribution = []
+        distribution = [];
         for y = 1:size(data_cell, 1)
             for x = 1:size(data_cell, 2)
                 
-                smallest_dist = inf
-                closest_centroid = 0
-                for c = 1:size(selected_centroids, 2)
-                    cur_distance = squared_euc_distance(y, x, selected_centroids{c}(1), selected_centroids{c}(2)
-                    if cur_dista
-    
-    end
-    
+                smallest_dist = inf;
+                closest_centroid = 0;
+                for c = 1:(i-1)
+                    
+                    if size(init_clusters{c}, 2) == 0
+                        a = 5
+                    end
+                    
+                    cur_distance = squared_euc_dist(data_cell{y, x}, init_clusters{c});
+                    if cur_distance < smallest_dist
+                        smallest_dist = cur_distance;
+                        closest_centroid = c;
+                    end
+                end
+                
+                prob_weight = squared_euc_dist(data_cell{y, x}, init_clusters{closest_centroid});
+                %prob_weight = idivide(prob_weight, 10, 'floor');
+                
+                %.....TBD...proportional to its sq distance from the
+                %nearest centroid, therefor weighting it by that factor in
+                %the overall distribution...
+                
+                aug_point = horzcat([prob_weight], data_cell{y, x});
+                distribution = vertcat(distribution, aug_point);     
+            end
+        end
         
-  
+        %Add along the columns of the dist matrix
+        total = sum(distribution);
+        %only the first column had the weights
+        total = total(1);
+        %random point among those weights
+        rand_point = randi(total);
+        
+        index = 1;
+        sum_passed = int64(0);
+
+        
+        while sum_passed + int64(distribution(index, 1)) < rand_point
+            sum_passed = sum_passed + int64(distribution(index, 1));
+            index = index + 1;
+            if index > size(distribution, 1)
+                a = 3
+            end
+        end
+        
+        selected = distribution(index, :);
+        %Have to remove the weight that was appended to the centroid point.
+        selected(1) = [];
+        init_clusters{i} = selected
     end
     
-    
-    
-    %Even in K Means++, you've gotta pick your first point randomly!
-function [y, x] = random_start_point(data_cell, y_dim, x_dim)
+end
+
+
+
+%Even in K Means++, you've gotta pick your first point randomly!
+function [points] = random_start_point(data_cell, y_dim, x_dim)
 
     x = 0;
     y = 0;
@@ -116,10 +149,17 @@ function [y, x] = random_start_point(data_cell, y_dim, x_dim)
             break
         end
     end
+    
+    points = [y, x]
 end
 
-function [sq_dist] = squared_euc_dist(y1, x1, y2, x2)
-    sq_dist = power(y1 - y2, 2) + power(x1 - x2, 2)
+
+
+function [sq_dist] = squared_euc_dist(first_data, second_data)
+    sq_dist = 0;
+    for i = 1:size(first_data, 2)
+        sq_dist = sq_dist + power(first_data(i) - second_data(i), 2);
+    end
 end
 
 

@@ -13,15 +13,13 @@ function [] = cluster_algo(radius)
     
     for i = lower_x:upper_x
         for j = lower_y:upper_y
-            im_cell{j, i} = [j, i, target(j, i)*10000];
+            im_cell{j, i} = [j, i, int32(target(j, i))];
         end
     end
     
+    points = clustering(im_cell, 3, 20);
     
-    
-    points = clustering(im_cell, 3, 0, 3);
-    
-m    for i = 1:size(points, 2)
+    for i = 1:size(points, 2)
         touched = 0;
         for j = 1:size(points{i}, 1)
             if binary_seg(points{i}(j, 1), points{i}(j, 2)) == 1
