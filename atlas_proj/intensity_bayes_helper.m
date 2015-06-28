@@ -1,4 +1,4 @@
-function [sum] = intensity(x, y, radius, image)
+function [sum] = intensity(y, x, radius, image)
     
     sum = int64(0);
     for m = x-radius:x+radius
