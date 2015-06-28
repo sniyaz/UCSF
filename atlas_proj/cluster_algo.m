@@ -17,7 +17,7 @@ function [] = cluster_algo(radius)
         end
     end
     
-    points = clustering(im_cell, 3, 20);
+    points = clustering(im_cell, 3, 10);
     
     for i = 1:size(points, 2)
         touched = 0;

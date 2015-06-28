@@ -27,11 +27,9 @@ function [out] = test()
     %atlas_seg{5} = seg5;
     
     
-    
-    
     %A crappy attempt at making our consensus matrix into a binary map!
     %Soon to be replaced with Bayesian Classifier! 
-    test_output = consensus(target, atlas_images, atlas_seg);
+    test_output = core_algo(target, atlas_images, atlas_seg);
     
     %Save it?
     dlmwrite('test_consensus_mat.txt', test_output)

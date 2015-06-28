@@ -27,9 +27,11 @@ function [centroid_points] = clustering(data_cell, dimension, num_centroids)
         
         centroid_points = new_centroid_points;
         
-        for i = 1:num_centroids
+        for i = num_centroids:-1:1
             if size(values_cell{i}, 1) == 0
-                centroids{i} = random_start_point(data_cell, size(data_cell, 1), size(data_cell, 2));
+                centroids{i}(1) = randi(367);
+                centroids{i}(2) = randi(367);
+                centroids{i}(3) = randi(256);
             elseif size(values_cell{i}, 1) == 1
                 centroids{i} = values_cell{i};
             else
@@ -48,10 +50,11 @@ function [init_centroids] = kmeans_plus(data_cell, num_centroids)
     %init_clusters is the thing that we actually returns out
     %containing an n dimensional cell of data points that will be used as
     %the ACTUAL cetroids in K Means. We build this list up as we go...
-    init_centroids = cell(1, 1);
+    init_centroids = cell(1, 1)
 
     % random point picked as start centroid!
-    init_centroids{1} = random_start_point(data_cell, size(data_cell, 1), size(data_cell, 2))
+    random_start_point(data_cell, size(data_cell, 1), size(data_cell, 2)) 
+    init_centroids{1} = data_cell{start_coords(1), start_coords(2)}
     
     for i = 2:num_centroids
         distribution = [];
