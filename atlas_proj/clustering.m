@@ -1,6 +1,6 @@
 %An implementation of k-means clustering for pixels. 
 %Who knows, it might just come in handy...
-function [centroid_points] = clustering(data_cell, dimension, num_centroids)
+function [centroid_points] = clustering(data_cell, num_centroids)
 
     centroids = kmeans_plus(data_cell, num_centroids); %
     centroid_points = cell(1, num_centroids); %
@@ -27,9 +27,15 @@ function [centroid_points] = clustering(data_cell, dimension, num_centroids)
         
         centroid_points = new_centroid_points;
         
+        %If one centroid has no points associated with it all, we
+        %re-initialize it as a totally random point inside our dimensional
+        %space. Otherwise, we do the typical K Means step of re-aligning
+        %each centroid to the mean value of every point associated with it.
         for i = 1:num_centroids
             if size(values_cell{i}, 1) == 0
-                centroids{i} = random_start_point(data_cell, size(data_cell, 1), size(data_cell, 2));
+                centroids{i}(1) = randi(367);
+                centroids{i}(2) = randi(367);
+                centroids{i}(3) = randi(256);
             elseif size(values_cell{i}, 1) == 1
                 centroids{i} = values_cell{i};
             else
