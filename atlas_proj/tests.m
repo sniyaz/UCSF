@@ -1,39 +1,41 @@
 function [out] = test()
     
-    target = imread('test_data/brains/brain_1.jpg')
-    seg1 = dlmread('test_data/brains/brain_2_seg.txt') 
-    seg2 = dlmread('test_data/brains/brain_3_seg.txt')
-    seg3 = dlmread('test_data/brains/brain_4_seg.txt')
+    target = load('HighResSegmentation\SampleImage.mat');
+    %Extracting one slice of the MRI Cube.
+    target = target.FixedImage.Data(:,:,150);
     
-    %seg4 = dlmread('test_data/ball_seg_4.txt')
-    %seg5 = dlmread('test_data/ball_seg_5.txt')
+    %Targeting an MFC segmentation currently, on slice 101 of the target
+    %cube.
+    seg1 = load('HighResSegmentation\Atlas1\MFC_Atlas1.mat');
+    %Binarize the atlas mask.
+    seg1 = logical(seg1.MovedMask.Data(:,:,150));
     
+    seg2 = load('HighResSegmentation\Atlas2\MFC_Atlas2.mat');
+    seg2 = logical(seg2.MovedMask.Data(:,:,150));
     
-    atlas_images = cell(1, 3)
-    atlas_images{1} = imread('test_data/brains/brain_2.jpg');
-    atlas_images{2} = imread('test_data/brains/brain_3.jpg');
-    atlas_images{3} = imread('test_data/brains/brain_4.jpg');
-    
-    %atlas_images{4} = target;
-    %atlas_images{5} = target;
-    
-    
-    atlas_seg = cell(1, 3)
+    atlas_seg = cell(1, 2);
     atlas_seg{1} = seg1;
     atlas_seg{2} = seg2;
-    atlas_seg{3} = seg3;
+       
+    %Now for the atlas images!
+    im_1 = load('HighResSegmentation/Morphed1.mat');
+    im_2 = load('HighResSegmentation/Morphed2.mat');
     
-    %atlas_seg{4} = seg4;
-    %atlas_seg{5} = seg5;
-    
-    
-    %A crappy attempt at making our consensus matrix into a binary map!
-    %Soon to be replaced with Bayesian Classifier! 
-    test_output = core_algo(target, atlas_images, atlas_seg);
+    im_1 = im_1.RegMoving.Data(:,:,150);
+    im_2 = im_2.RegMoving.Data(:,:,150);
+   
+    atlas_images = cell(1, 2);
+    atlas_images{1} = double(im_1);
+    atlas_images{2} = double(im_2);
+      
+    %Run the core algorithm.
+    test_output = core_algo(target, atlas_images, atlas_seg, 5);
     
     %Save it?
-    dlmwrite('test_consensus_mat.txt', test_output)
+    dlmwrite('test_consensus_mat.txt', test_output);
         
+    %A crappy attempt at making our consensus matrix into a binary map!
+    %Soon to be replaced with Bayesian Classifier! 
     for i = 1:size(test_output, 2)
         for j = 1:size(test_output, 1)
             if test_output(j, i) > 0.5
@@ -44,9 +46,8 @@ function [out] = test()
         end
     end
     
-    dlmwrite('test_binary_seg.txt', test_output)
     
     target(~test_output) = 0;
-    imshow(target)
+    imshow(target, [])
     out = test_output
 end    

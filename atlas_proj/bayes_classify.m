@@ -28,6 +28,11 @@ function [label] = bayes_classify(target_image, consensus_matrix, x, y, radius)
         
         prob_matrix_contribution = [];
         target_voxel_value = current_dim_func(y, x, radius, target_image);
+        %In learning, we had to start from 1 since MATLab won't allow 0
+        %indexing, and thus we had to 
+        if target_voxel_value == 0
+            target_voxel_value = 1;
+        end
         prob_matrix_contribution(1) = (in_distribution(target_voxel_value))/(sum(in_distribution));
         prob_matrix_contribution(2) = (out_distribution(target_voxel_value))/(sum(out_distribution));
         conditional_prob_matrix = vertcat(conditional_prob_matrix, prob_matrix_contribution);

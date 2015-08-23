@@ -2,10 +2,11 @@ function [] = bayes_test()
 
     %Initialization for testing purposes. Once the program becomes more final, this will be fully integrated
     %into the overall structure. That said, it shouldn't be all that difficult.
-    target_image = imread('test_data/brains/brain_1.jpg');
+    target_cube = load('HighResSegmentation\SampleImage.mat');
+    target_image = target_cube.FixedImage.Data(:,:,150)
     consensus_matrix = dlmread('test_consensus_mat.txt');
-    output_segmentation = consensus_matrix
-    radius = 5;
+    output_segmentation = consensus_matrix;
+    radius = 9;
     
     %Making sure we're in the bounding bx given by the radius that certain
     %helper functions need (ie using SSD to provide one dimension used by
@@ -26,11 +27,11 @@ function [] = bayes_test()
                 output_segmentation(j, i) = 0;
             else
                 %Otherwise, let's do some Bayesian classifying!
-                output_segmentation(j, i) = bayes_classify(target_image, consensus_matrix, i, j, 5);
+                output_segmentation(j, i) = bayes_classify(target_image, consensus_matrix, i, j, radius);
         end
     end
     
-    target_image(~consensus_matrix) = 0;
-    imshow(target_image)
+    target_image(~output_segmentation) = 0;
+    imshow(target_image, []);
 
 end
