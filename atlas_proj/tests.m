@@ -1,16 +1,16 @@
 function [out] = test()
     
-    target = load('HighResSegmentation\SampleImage.mat');
+    target = load('HighResSegmentation/SampleImage.mat');
     %Extracting one slice of the MRI Cube.
     target = target.FixedImage.Data(:,:,150);
     
     %Targeting an MFC segmentation currently, on slice 101 of the target
     %cube.
-    seg1 = load('HighResSegmentation\Atlas1\MFC_Atlas1.mat');
+    seg1 = load('HighResSegmentation/Atlas1/MFC_Atlas1.mat');
     %Binarize the atlas mask.
     seg1 = logical(seg1.MovedMask.Data(:,:,150));
     
-    seg2 = load('HighResSegmentation\Atlas2\MFC_Atlas2.mat');
+    seg2 = load('HighResSegmentation/Atlas2/MFC_Atlas2.mat');
     seg2 = logical(seg2.MovedMask.Data(:,:,150));
     
     atlas_seg = cell(1, 2);

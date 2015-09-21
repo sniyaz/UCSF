@@ -1,11 +1,13 @@
-function [out_prob_pair] = bayes_learning(num_centroids) 
+function [out_prob_pair] = bayes_learning(radius) 
 
     %Functions that correspond to each dimension in the Bayes Analysis. Take a pixel and spit out the dimensional value for that pixel.    
     dimensions = {'intensity_bayes_helper', 'neighbor_intensity_bayes_helper','local_entropy_bayes_helper', 'local_std_bayes_helper'}
 
+    
+    
     %Which slice are you trying to segment in the target cube?    
     target_slice = 150;
-    
+   
     %How much to move forward of backwards from target slice in MRI cube to
     %gather data. I.e. if target slice is 105 and this is 3, in each atlas
     %cube we search through slices 102-108! So this is like a learning
