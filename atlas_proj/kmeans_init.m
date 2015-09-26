@@ -7,11 +7,11 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
     target_im = target_im.FixedImage.Data(:,:,150);
     
     
-    
     target_im = im2double(target_im);
     
     %For Display purposes at the end...
     target_im_cpy = target_im;
+    target_im_cpy2 = target_im;
     
     consensus_mat = dlmread('test_consensus_mat.txt');
     
@@ -26,7 +26,7 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
                 %set every voxel in the target image equal to some
                 %ridiculous value so that all of them fall into a single
                 %bucket upon the implementation of the graph cut algorithm
-                target_im(i, j) = 100000;
+                target_im(i, j) = 100000000;
                 
             else
                 target_points = vertcat(target_points, [target_im(i, j)]); 
@@ -35,10 +35,9 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
         end      
     end
     
-    num_centroids = 20
+    num_centroids = 30
     [idx, c] = kmeans(target_points, num_centroids);
     
-    labeled_image = zeros(size(target_im, 1), size(target_im, 2));
     super_pixel_cell = cell(1, num_centroids);
     
     %BEGIN graph cut portion of super-pixel creation.
@@ -47,7 +46,7 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
     label_costs = zeros(size(target_im, 1), size(target_im, 2), num_centroids + 1, 'single');
     for ci=1:num_centroids
         % use covariance matrix per cluster
-        icv = inv(cov(target_points(idx==ci,:)));    
+        icv = inv(cov(target_points(idx==ci)));    
         dif = target_points - repmat(c(ci,:), [size(target_points,1) 1]);
         % data cost is minus log likelihood of the pixel to belong to each
         % cluster according to its value
@@ -68,7 +67,7 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
     
     for i = 1:size(label_costs, 1)
         for j = 1:size(label_costs, 2)
-            %Is this a zero probability matrix?
+            %Is this a zero probability pixel?
             if consensus_mat(i, j) == 0
                 for real_centroid = 1:num_centroids;
                     label_costs(i, j, real_centroid) = absurd_cost;
@@ -76,24 +75,58 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
                 label_costs(i, j, num_centroids + 1) = 0;
             else
                 label_costs(i, j, num_centroids + 1) = absurd_cost;
+                
+                
+                
+                
             end
         end
     end
     
     % smoothness term: 
     % constant part
-    sC = ones(num_centroids+1) - eye(num_centroids+1);
+    sC = ones(num_centroids+1);
     [hC, vC] = spatial_varying_cost_gen(target_im);
     
-    gch = GraphCut('open', label_costs, 10*sC, vC, hC);
+    gch = GraphCut('open', 10*label_costs, sC, 10000*vC, 10000*hC);
     
     [gch L] = GraphCut('expand',gch);
     gch = GraphCut('close', gch);
     
+    %Prepare values for return:
+    labeled_image = L+1
+    for i = 1:size(labeled_image, 1)
+        for j = 1:size(labeled_image, 2)
+            current_label = labeled_image(i,j);
+            %That extra centroid is just bunk that we don't care about!
+            if current_label ~= num_centroids+1
+                
+                
+                %DEBUGGING:
+                if consensus_mat(i, j) == 0
+                    %THIS IS A PROBLEM!
+                    foo = 1
+                end
+                
+                super_pixel_cell{current_label} = vertcat(super_pixel_cell{current_label}, [i, j]);
+                
+                %for plotting at the the end:
+                
+                colors = [0, 600, 400, 200, 800, 1000, 1200];
+                color_selector = mod(current_label, 7) + 1;
+                target_im_cpy(i, j) = colors(color_selector);
+                           
+            end
+        end
+    end
+    
+    
+    
     % show results
     imshow(target_im_cpy, []);
-    hold on;
-    PlotLabels(L);
+    %imshow(target_im, [])
+    %hold on;
+    %PlotLabels(L);
 
     
     %{
@@ -147,14 +180,6 @@ colorbar;
 colormap 'jet';
 
 end
-
-
-    
-
-
-
-
-
 
 
 
