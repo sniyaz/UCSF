@@ -1,6 +1,7 @@
 function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_mat)
 
     clear all
+    close all
     
     target_im = load('HighResSegmentation/SampleImage.mat');
     %Extracting one slice of the MRI Cube.
@@ -12,51 +13,36 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
     %For Display purposes at the end...
     target_im_cpy = target_im;
     target_im_cpy2 = target_im;
-    
+
     consensus_mat = dlmread('test_consensus_mat.txt');
+        
+    %set every voxel in the target image equal to some
+    %ridiculous value so that all of them fall into a single
+    %bucket upon the implementation of the graph cut algorithm
+    target_im(find(consensus_mat == 0)) = 100000000;
     
+    point_mapping = find(consensus_mat ~= 0)
     
-
-    target_points = [];
-    point_array_mapping = []
-
-    for i = 1:size(target_im, 1)
-        for j = 1:size(target_im, 2)
-            if (consensus_mat(i, j) == 0)
-                %set every voxel in the target image equal to some
-                %ridiculous value so that all of them fall into a single
-                %bucket upon the implementation of the graph cut algorithm
-                target_im(i, j) = 100000000;
-                
-            else
-                target_points = vertcat(target_points, [target_im(i, j)]); 
-                point_array_mapping = vertcat(point_array_mapping, [i, j]);
-            end
-        end      
-    end
-    
+    %for cropping around the area of cartilage later...
+    [I, J] = ind2sub(size(target_im), point_mapping);
+ 
+    %Call to KMeans for initialization...
     num_centroids = 30
+    target_points = target_im(point_mapping)
+    %Including spatial information in KMeans. Not always done.
+    %target_points = horzcat(target_points, I, J)
+    
     [idx, c] = kmeans(target_points, num_centroids);
     
+    %Plotting the kmeans clusters as a sanity check!
+    kmeans_labels = zeros(size(target_im, 1), size(target_im, 2));
+    kmeans_labels(point_mapping) = idx;
+    kmeans_labels = kmeans_labels(min(I):max(I), min(J):max(J));
+    %imagesc(kmeans_labels);
+        
     super_pixel_cell = cell(1, num_centroids);
     
     %BEGIN graph cut portion of super-pixel creation.
-    
-    % calculate the data cost per cluster center
-    label_costs = zeros(size(target_im, 1), size(target_im, 2), num_centroids + 1, 'single');
-    for ci=1:num_centroids
-        % use covariance matrix per cluster
-        icv = inv(cov(target_points(idx==ci)));    
-        dif = target_points - repmat(c(ci,:), [size(target_points,1) 1]);
-        % data cost is minus log likelihood of the pixel to belong to each
-        % cluster according to its value
-        individual_costs = sum((dif*icv).*dif./2,2);
-        for p = 1:size(individual_costs, 1)
-            i_coord = point_array_mapping(p, 1);
-            j_coord = point_array_mapping(p, 2);
-            label_costs(i_coord, j_coord, ci) = individual_costs(p);
-        end
-    end
     
     %We have an extra centroid/label in our label_cost matrix. This is due
     %to the fact that we need to account for the extra label that all the
@@ -65,24 +51,25 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
     
     absurd_cost = single(1000000);
     
-    for i = 1:size(label_costs, 1)
-        for j = 1:size(label_costs, 2)
-            %Is this a zero probability pixel?
-            if consensus_mat(i, j) == 0
-                for real_centroid = 1:num_centroids;
-                    label_costs(i, j, real_centroid) = absurd_cost;
-                end
-                label_costs(i, j, num_centroids + 1) = 0;
-            else
-                label_costs(i, j, num_centroids + 1) = absurd_cost;
-                
-                
-                
-                
-            end
-        end
+    % calculate the data cost per cluster center
+    label_costs = zeros(size(target_im, 1), size(target_im, 2), num_centroids + 1, 'single');
+    for ci=1:num_centroids
+        % use covariance matrix per cluster
+        icv = inv(cov(target_points(idx==ci)));    
+        dif = target_points - repmat(c(ci,:), [size(target_points,1) 1]);
+        % data cost is minus log likelihood of the pixel to belong to each
+        % cluster according to its intensity value
+        individual_costs = sum((dif*icv).*dif./2,2);
+        new_label_slice = zeros(size(target_im, 1), size(target_im, 2));
+        new_label_slice(point_mapping) = individual_costs;
+        new_label_slice(find(consensus_mat == 0)) = absurd_cost;
+        label_costs(:,:,ci) = new_label_slice;
     end
     
+    last_centroid_costs = zeros(size(target_im, 1), size(target_im, 2), 'single');
+    last_centroid_costs(point_mapping) = absurd_cost;
+    label_costs(:,:,num_centroids+1) = last_centroid_costs;
+ 
     % smoothness term: 
     % constant part
     sC = ones(num_centroids+1);
@@ -95,6 +82,7 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
     
     %Prepare values for return:
     labeled_image = L+1
+    
     for i = 1:size(labeled_image, 1)
         for j = 1:size(labeled_image, 2)
             current_label = labeled_image(i,j);
@@ -112,9 +100,9 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
                 
                 %for plotting at the the end:
                 
-                colors = [0, 600, 400, 200, 800, 1000, 1200];
-                color_selector = mod(current_label, 7) + 1;
-                target_im_cpy(i, j) = colors(color_selector);
+                %colors = [0, 600, 400, 200, 800, 1000, 1200];
+                %color_selector = mod(current_label, 7) + 1;
+                %target_im_cpy(i, j) = colors(color_selector);
                            
             end
         end
@@ -123,7 +111,10 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
     
     
     % show results
-    imshow(target_im_cpy, []);
+    cropped_labeled_image = labeled_image(min(I):max(I), min(J):max(J))
+    imagesc(cropped_labeled_image)
+    
+    %imshow(target_im_cpy, []);
     %imshow(target_im, [])
     %hold on;
     %PlotLabels(L);
