@@ -29,7 +29,9 @@ function [out] = SSD(target_image, atlas_image_a, atlas_image_b, y, x, radius)
             sum = sum + (local_difference_a*local_difference_b);
         end
     end
-    
-    out = power(sum, beta);   
+
+    out = power(sum, beta); 
+  
+      
 end
  

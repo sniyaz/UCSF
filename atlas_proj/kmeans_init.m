@@ -1,37 +1,32 @@
-function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_mat)
+function [labeled_image, super_pixel_cell] = kmeans_init()
 
     clear all
     close all
     
     target_struc = load('HighResSegmentation/SampleImage.mat');
     %Extracting one slice of the MRI Cube.
-    target_im = target_struc.FixedImage.Data(:,:,150);
+    target_cube = target_struc.FixedImage.Data;
+    target_cube = double(target_cube);
     
     
-    target_im = im2double(target_im);
-    
-    %For Display purposes at the end...
-    target_im_cpy = target_im;
-    target_im_cpy2 = target_im;
 
-    consensus_mat = dlmread('test_consensus_mat.txt');
+    consensus_cube = dlmread('linear_true_consensus_cube.txt');
+    consensus_cube = reshape(consensus_cube, size(target_struc.FixedImage.Data));
         
-    %set every voxel in the target image equal to some
+    %set every voxel with zero probability in the target image equal to some
     %ridiculous value so that all of them fall into a single
     %bucket upon the implementation of the graph cut algorithm
-    target_im(find(consensus_mat == 0)) = 100000000;
+    target_cube(find(consensus_cube == 0)) = 100000000;
     
-    point_mapping = find(consensus_mat ~= 0)
+    point_mapping = find(consensus_cube ~= 0);
     
-    %for cropping around the area of cartilage later...
-    [I, J] = ind2sub(size(target_im), point_mapping);
- 
+   
     %Call to KMeans for initialization...
-    num_centroids = 12
-    target_points = target_im(point_mapping)
+    num_centroids = 20
+    target_points = target_cube(point_mapping);
     %Including propbability information in KMeans.
-    probability_data = consensus_mat(point_mapping)
-    %target_points = horzcat(target_points, probability_data)
+    probability_data = consensus_cube(point_mapping);
+    target_points = horzcat(target_points, probability_data);
     %Including spatial information in KMeans. Not always done.
     %target_points = horzcat(target_points, I, J)
     
@@ -39,16 +34,16 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
     %num_centroid evenly spaced points in the target_points input as our
     %start centroids.
     kmeans_start_indicies = transpose(int32(linspace(1, size(target_points, 1), num_centroids)))
-    kmeans_start_centroids = target_points(kmeans_start_indicies)
-     
+    kmeans_start_centroids = target_points(kmeans_start_indicies, :)
+    
     %[idx, c] = kmeans(target_points, num_centroids);
     [idx, c] = kmeans(target_points, [], 'start', kmeans_start_centroids);
     
-    %Plotting the kmeans clusters as a sanity check!
-    kmeans_labels = zeros(size(target_im, 1), size(target_im, 2));
-    kmeans_labels(point_mapping) = idx;
-    kmeans_labels = kmeans_labels(min(I):max(I), min(J):max(J));
-    %imagesc(kmeans_labels);
+    %Plotting the kmeans clusters as a sanity  check!
+    kmeans_cube = zeros(size(target_cube));
+    kmeans_cube(point_mapping) = idx;
+    kmeans_labels = kmeans_cube(:,:,150)
+    imagesc(kmeans_labels); 
         
     super_pixel_cell = cell(1, num_centroids);
     
@@ -62,7 +57,7 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
     absurd_cost = single(1000000);
     
     % calculate the data cost per cluster center
-    label_costs = zeros(size(target_im, 1), size(target_im, 2), num_centroids + 1, 'single');
+    label_costs = zeros(size(target_cube, 1), size(target_cube, 2), size(target_cube, 3), num_centroids + 1, 'single');
     for ci=1:num_centroids
         % use covariance matrix per cluster
         icv = inv(cov(target_points(idx==ci)));    
@@ -70,22 +65,21 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
         % data cost is minus log likelihood of the pixel to belong to each
         % cluster according to its intensity value
         individual_costs = sum((dif*icv).*dif./2,2);
-        new_label_slice = zeros(size(target_im, 1), size(target_im, 2));
-        new_label_slice(point_mapping) = individual_costs;
-        new_label_slice(find(consensus_mat == 0)) = absurd_cost;
-        label_costs(:,:,ci) = new_label_slice;
+        new_label_cube = zeros(size(target_cube, 1), size(target_cube, 2), size(target_cube, 3));
+        new_label_cube(point_mapping) = individual_costs;
+        new_label_cube(find(consensus_cube == 0)) = absurd_cost;
+        label_costs(:,:,:,ci) = new_label_cube;
     end
     
-    last_centroid_costs = zeros(size(target_im, 1), size(target_im, 2), 'single');
+    last_centroid_costs = zeros(size(target_cube, 1), size(target_cube, 2), size(target_cube, 3), 'single');
     last_centroid_costs(point_mapping) = absurd_cost;
-    label_costs(:,:,num_centroids+1) = last_centroid_costs;
+    label_costs(:,:,:,num_centroids+1) = last_centroid_costs;
  
     % smoothness term: 
     % constant part
     sC = ones(num_centroids+1);
-    [hC, vC] = spatial_varying_cost_gen(target_im);
-    
-    gch = GraphCut('open', label_costs, sC, 1000*vC, 1000*hC);
+        
+    gch = GraphCut('open', label_costs, sC, target_cube);
     
     [gch L] = GraphCut('expand',gch);
     gch = GraphCut('close', gch);
@@ -95,24 +89,26 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
     
     for i = 1:size(labeled_image, 1)
         for j = 1:size(labeled_image, 2)
-            current_label = labeled_image(i,j);
-            %That extra centroid is just bunk that we don't care about!
-            if current_label ~= num_centroids+1
-                
-                
-                %DEBUGGING:
-                if consensus_mat(i, j) == 0
-                    %THIS IS A PROBLEM!
-                    foo = 1
+            for k = 1:1:size(labeled_image, 3)
+                current_label = labeled_image(i,j,k);
+                %That extra centroid is just bunk that we don't care about!
+                if current_label ~= num_centroids+1
+
+
+                    %DEBUGGING:
+                    if consensus_mat(i, jmk) == 0
+                        %THIS IS A PROBLEM!
+                        foo = 1
+                    end
+
+                    super_pixel_cell{current_label} = vertcat(super_pixel_cell{current_label}, [i, j, k]);
+
+                    %for plotting at the the end:
+
+                    %colors = [0, 600, 400, 200, 800, 1000, 1200];
+                    %color_selector = mod(current_label, 7) + 1;
+                    %target_im_cpy(i, j) = colors(color_selector);
                 end
-                
-                super_pixel_cell{current_label} = vertcat(super_pixel_cell{current_label}, [i, j]);
-                
-                %for plotting at the the end:
-                
-                %colors = [0, 600, 400, 200, 800, 1000, 1200];
-                %color_selector = mod(current_label, 7) + 1;
-                %target_im_cpy(i, j) = colors(color_selector);
                            
             end
         end
@@ -121,21 +117,26 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
     
     
     % show results
-    cropped_labeled_image = labeled_image(min(I):max(I), min(J):max(J))
+    sample_slice = labeled_image(:,:,150);
+    imagesc(sample_slice)
+    
+    %cropped_labeled_image = labeled_image(min(I):max(I), min(J):max(J))
     
     %subplot(1, 2, 1)
    
     
-    imagesc(cropped_labeled_image)
-    colorbar
-    colormap('hsv')
+    %imagesc(cropped_labeled_image)
+    %colorbar
+    %colormap('hsv')
     
     %subplot(1, 2, 2)
     
+    %{
     figure
     mri_slice = target_struc.FixedImage.Data(:,:,150)
     mri_slice = mri_slice(min(I):max(I), min(J):max(J))
     imshow(mri_slice, [])
+    %}
     
     %imshow(target_im_cpy, []);
     %imshow(target_im, [])
@@ -160,9 +161,11 @@ function [hC, vC] = spatial_varying_cost_gen(im)
     
     im_height = size(im, 1);
     im_width = size(im, 2);
+    im_depth = size(im, 3);
     
-    vC = zeros(im_height, im_width, 'single');
-    hC = zeros(im_height, im_width, 'single');
+    vC = zeros(im_height, im_width, im_depth, 'single');
+    hC = zeros(im_height, im_width, im_depth, 'single');
+    dC = zeros(im_height, im_width, im_depth, 'single');
     
     for i = 1:(im_height - 1)
         for j = 1:im_width

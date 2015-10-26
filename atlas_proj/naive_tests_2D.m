@@ -23,6 +23,11 @@ function [out] = test()
     
     im_1 = im_1.RegMoving.Data(:,:,150);
     im_2 = im_2.RegMoving.Data(:,:,150);
+
+    %eliminating negative intensity values...
+    im_1(find(im_1 < 0)) = 0;
+    im_2(find(im_2 < 0)) = 0;
+    
    
     atlas_images = cell(1, 2);
     atlas_images{1} = double(im_1);
@@ -31,6 +36,10 @@ function [out] = test()
     %Run the core algorithm.
     test_output = core_algo(target, atlas_images, atlas_seg, 5);
     
+    %Sometimes we get anegative consensuses data point. We treat these as probabilities
+    %later, so the ones that (rarely) come out negative need to become 0.
+    test_output(find(test_output < 0)) = 0;
+
     %Save it?
     dlmwrite('test_consensus_mat.txt', test_output);
         

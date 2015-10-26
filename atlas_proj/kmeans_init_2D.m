@@ -27,7 +27,7 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
     [I, J] = ind2sub(size(target_im), point_mapping);
  
     %Call to KMeans for initialization...
-    num_centroids = 12
+    num_centroids = 10
     target_points = target_im(point_mapping)
     %Including propbability information in KMeans.
     probability_data = consensus_mat(point_mapping)
@@ -85,7 +85,7 @@ function [labeled_image, super_pixel_cell] = kmeans_init(target_im, consensus_ma
     sC = ones(num_centroids+1);
     [hC, vC] = spatial_varying_cost_gen(target_im);
     
-    gch = GraphCut('open', label_costs, sC, 1000*vC, 1000*hC);
+    gch = GraphCut('open', label_costs, sC, 1000000*vC, 1000000*hC);
     
     [gch L] = GraphCut('expand',gch);
     gch = GraphCut('close', gch);

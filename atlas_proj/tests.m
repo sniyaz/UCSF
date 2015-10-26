@@ -4,7 +4,7 @@ function [out] = test()
     %Extracting one slice of the MRI Cube.
     target = target.FixedImage.Data(:,:,150);
     
-    %Targeting an MFC segmentation currently, on slice 101 of the target
+    %Targeting an MFC segmentation currently, on slice 150 of the target
     %cube.
     seg1 = load('HighResSegmentation/Atlas1/MFC_Atlas1.mat');
     %Binarize the atlas mask.
