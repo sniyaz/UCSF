@@ -14,8 +14,8 @@ function [weights] = mx_to_weights(mx_input)
     
     if weights(1, 1) < 0 || weights(2, 1) < 0
         
-        bad_mx = mx_input
-        bad_weights = weights
+        bad_mx = mx_input;
+        bad_weights = weights;
     end
     
     

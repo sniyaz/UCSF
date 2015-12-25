@@ -1,18 +1,37 @@
-function [labeled_image, super_pixel_cell] = kmeans_init()
-
-    clear all
-    close all
+function [labeled_image, super_pixel_cell] = kmeans_init(num_centroids, grad_weight)
+  
+    sizes_3d = dlmread('project_data/sizes_ds.txt');
     
-    target_struc = load('HighResSegmentation/SampleImage.mat');
-    %Extracting one slice of the MRI Cube.
-    target_cube = target_struc.FixedImage.Data;
-    target_cube = double(target_cube);
+    target_cube = dlmread('project_data/im1_orig_ds.txt');
+    target_cube = reshape(target_cube, sizes_3d);
     
     
-
-    consensus_cube = dlmread('linear_true_consensus_cube.txt');
-    consensus_cube = reshape(consensus_cube, size(target_struc.FixedImage.Data));
-        
+    consensus_cube = dlmread('project_data/consensus_adhoc_1.txt');
+    consensus_cube = reshape(consensus_cube, sizes_3d);
+    
+    %{
+    %Extra cruft for SVM initialiation
+    target_cube = dlmread('project_data/im1_ds.txt');
+    target_cube = reshape(target_cube, sizes_3d);
+    
+    consensus_cube = dlmread('project_data/seg1_ds.txt');
+    consensus_cube = reshape(consensus_cube, sizes_3d);
+    %Extra SVM Cruft Ends!
+    %}
+    
+    
+    
+    target_cube_size_copy = size(target_cube);
+    interest_points = find(consensus_cube ~= 0);
+    [I, J, K] = ind2sub(size(target_cube), interest_points);
+    rsc_is = [min(I), max(I), min(J), max(J), min(K), max(K)]
+    target_cube = target_cube(min(I):max(I), min(J):max(J), min(K):max(K));
+    consensus_cube = consensus_cube(min(I):max(I), min(J):max(J), min(K):max(K));
+    target_cube_copy = target_cube;
+    
+    
+    
+    
     %set every voxel with zero probability in the target image equal to some
     %ridiculous value so that all of them fall into a single
     %bucket upon the implementation of the graph cut algorithm
@@ -22,28 +41,35 @@ function [labeled_image, super_pixel_cell] = kmeans_init()
     
    
     %Call to KMeans for initialization...
-    num_centroids = 20
     target_points = target_cube(point_mapping);
+    %Normalize the intensity values so intensity and probability have equal
+    %influence in KMeans
+    target_points = target_points/max(target_points);
+    
     %Including propbability information in KMeans.
     probability_data = consensus_cube(point_mapping);
-    target_points = horzcat(target_points, probability_data);
+    %Normalize the probability values so intensity and probability have equal
+    %influence in KMeans
+    probability_data = probability_data/max(abs(probability_data));
+    %target_points = horzcat(target_points, probability_data);
+    
     %Including spatial information in KMeans. Not always done.
     %target_points = horzcat(target_points, I, J)
     
     %We want the behavior of KMeans to be deterministic. So we take
     %num_centroid evenly spaced points in the target_points input as our
     %start centroids.
-    kmeans_start_indicies = transpose(int32(linspace(1, size(target_points, 1), num_centroids)))
-    kmeans_start_centroids = target_points(kmeans_start_indicies, :)
+    kmeans_start_indicies = transpose(int32(linspace(1, size(target_points, 1), num_centroids)));
+    kmeans_start_centroids = target_points(kmeans_start_indicies, :);
     
-    %[idx, c] = kmeans(target_points, num_centroids);
-    [idx, c] = kmeans(target_points, [], 'start', kmeans_start_centroids);
+    [idx, c] = kmeans(target_points, num_centroids);
+    %[idx, c] = kmeans(target_points, [], 'start', kmeans_start_centroids);
     
     %Plotting the kmeans clusters as a sanity  check!
     kmeans_cube = zeros(size(target_cube));
     kmeans_cube(point_mapping) = idx;
-    kmeans_labels = kmeans_cube(:,:,150)
-    imagesc(kmeans_labels); 
+    %kmeans_labels = kmeans_cube(:,:,20)
+    %imagesc(kmeans_labels); 
         
     super_pixel_cell = cell(1, num_centroids);
     
@@ -79,14 +105,20 @@ function [labeled_image, super_pixel_cell] = kmeans_init()
     % constant part
     sC = ones(num_centroids+1);
         
-    gch = GraphCut('open', label_costs, sC, target_cube);
+    gch = GraphCut('open', label_costs, sC, grad_weight*target_cube);
     
     [gch L] = GraphCut('expand',gch);
     gch = GraphCut('close', gch);
     
-    %Prepare values for return:
-    labeled_image = L+1
+    L = reshape(L, size(target_cube));
     
+    %Prepare values for return.
+    labeled_image = zeros(target_cube_size_copy);
+    labeled_image(find(labeled_image == 0)) = num_centroids+1;
+    labeled_image(rsc_is(1):rsc_is(2), rsc_is(3):rsc_is(4), rsc_is(5):rsc_is(6)) = L+1;
+    
+    
+    %{
     for i = 1:size(labeled_image, 1)
         for j = 1:size(labeled_image, 2)
             for k = 1:1:size(labeled_image, 3)
@@ -95,11 +127,7 @@ function [labeled_image, super_pixel_cell] = kmeans_init()
                 if current_label ~= num_centroids+1
 
 
-                    %DEBUGGING:
-                    if consensus_mat(i, jmk) == 0
-                        %THIS IS A PROBLEM!
-                        foo = 1
-                    end
+                    
 
                     super_pixel_cell{current_label} = vertcat(super_pixel_cell{current_label}, [i, j, k]);
 
@@ -113,12 +141,38 @@ function [labeled_image, super_pixel_cell] = kmeans_init()
             end
         end
     end
+    %}
     
+    %upsample back
+    %labeled_image = resize(labeled_image, final_cube_size);
     
     
     % show results
-    sample_slice = labeled_image(:,:,150);
-    imagesc(sample_slice)
+    
+    sample_slice = L(:,:,4);
+    sample_slice = sample_slice + 1;
+    imagesc(sample_slice);
+    
+    %Overlay
+    
+    %{
+    imshow(target_cube(:,:,70))
+    hold on
+    sample_slice = L(:,:,10);
+    sample_slice = sample_slice + 1;
+    h = imagesc(sample_slice);
+    hold off
+    alpha = zeros(size(target_cube_copy(:,:,10)));
+    alpha(find(alpha == 0)) = 0.1;
+    set(h, 'AlphaData', 0.5);
+    %}
+    
+    
+    %Save it?
+    out = labeled_image;
+    dlmwrite('project_data/atlas1_orig_cluster_ds.txt', labeled_image);
+    
+    
     
     %cropped_labeled_image = labeled_image(min(I):max(I), min(J):max(J))
     
@@ -156,47 +210,5 @@ function [labeled_image, super_pixel_cell] = kmeans_init()
     %}
           
 end
-
-function [hC, vC] = spatial_varying_cost_gen(im)
-    
-    im_height = size(im, 1);
-    im_width = size(im, 2);
-    im_depth = size(im, 3);
-    
-    vC = zeros(im_height, im_width, im_depth, 'single');
-    hC = zeros(im_height, im_width, im_depth, 'single');
-    dC = zeros(im_height, im_width, im_depth, 'single');
-    
-    for i = 1:(im_height - 1)
-        for j = 1:im_width
-            vC(i, j) = single(abs(im(i, j) - im(i+1, j)));
-        end
-    end
-    
-    for i = 1:(im_height)
-        for j = 1:(im_width-1)
-            hC(i, j) = single(abs(im(i, j) - im(i, j+1)));
-        end
-    end
-    
-end
-
-%-----------------------------------------------%
-function ih = PlotLabels(L)
-
-L = single(L);
-
-bL = imdilate( abs( imfilter(L, fspecial('log'), 'symmetric') ) > 0.1, strel('disk', 1));
-LL = zeros(size(L),class(L));
-LL(bL) = L(bL);
-Am = zeros(size(L));
-Am(bL) = .5;
-ih = imagesc(LL); 
-set(ih, 'AlphaData', Am);
-colorbar;
-colormap 'jet';
-
-end
-
 
 
