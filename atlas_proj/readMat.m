@@ -1,5 +1,5 @@
  %%  IPP splineto binary Mask   
-path = '/data/mqir-lix2/P50_ACL/ACL007/120223/E4630/ipsi/images/HighRes/ACL007_120223_E4630_CUBE_trans_ipsi_LFC_VPHighRes_ACL007_120223_E4630_T1p_ipsi_e1_ACL007_120223_E4630_CUBE_ipsi.mat'
+path = 'gold_standard/ACL007_120223_E4630_CUBE_trans_ipsi_MFC_VPHighRes_ACL007_120223_E4630_T1p_ipsi_e1_ACL007_120223_E4630_CUBE_ipsi.mat'
 load(path)
  Mask = zeros(myinfotosave.w1,myinfotosave.w2,myinfotosave.w3);
  for nslice = 1:myinfotosave.w3

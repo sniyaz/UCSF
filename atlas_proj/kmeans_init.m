@@ -2,11 +2,11 @@ function [labeled_image, super_pixel_cell] = kmeans_init(num_centroids, grad_wei
   
     sizes_3d = dlmread('project_data/sizes_ds.txt');
     
-    target_cube = dlmread('project_data/im1_orig_ds.txt');
+    target_cube = dlmread('project_data/static/im1_orig_ds.txt');
     target_cube = reshape(target_cube, sizes_3d);
     
     
-    consensus_cube = dlmread('project_data/consensus_adhoc_1.txt');
+    consensus_cube = dlmread('project_data/static/consensus_adhoc_1.txt');
     consensus_cube = reshape(consensus_cube, sizes_3d);
     
     %{
@@ -51,7 +51,7 @@ function [labeled_image, super_pixel_cell] = kmeans_init(num_centroids, grad_wei
     %Normalize the probability values so intensity and probability have equal
     %influence in KMeans
     probability_data = probability_data/max(abs(probability_data));
-    %target_points = horzcat(target_points, probability_data);
+    target_points = horzcat(target_points, probability_data);
     
     %Including spatial information in KMeans. Not always done.
     %target_points = horzcat(target_points, I, J)
@@ -63,7 +63,7 @@ function [labeled_image, super_pixel_cell] = kmeans_init(num_centroids, grad_wei
     kmeans_start_centroids = target_points(kmeans_start_indicies, :);
     
     [idx, c] = kmeans(target_points, num_centroids);
-    %[idx, c] = kmeans(target_points, [], 'start', kmeans_start_centroids);
+   %[idx, c] = kmeans(target_points, [], 'start', kmeans_start_centroids);
     
     %Plotting the kmeans clusters as a sanity  check!
     kmeans_cube = zeros(size(target_cube));
@@ -170,7 +170,7 @@ function [labeled_image, super_pixel_cell] = kmeans_init(num_centroids, grad_wei
     
     %Save it?
     out = labeled_image;
-    dlmwrite('project_data/atlas1_orig_cluster_ds.txt', labeled_image);
+    dlmwrite('project_data/ad_hoc_cluster1.txt', labeled_image);
     
     
     
