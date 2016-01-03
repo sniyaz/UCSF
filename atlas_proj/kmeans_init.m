@@ -2,11 +2,10 @@ function [labeled_image, super_pixel_cell] = kmeans_init(num_centroids, grad_wei
   
     sizes_3d = dlmread('project_data/sizes_ds.txt');
     
-    target_cube = dlmread('project_data/static/im1_orig_ds.txt');
+    target_cube = dlmread('project_data/static/target_ds.txt');
     target_cube = reshape(target_cube, sizes_3d);
     
-    
-    consensus_cube = dlmread('project_data/static/consensus_adhoc_1.txt');
+    consensus_cube = dlmread('project_data/static/target_consensus_ds.txt');
     consensus_cube = reshape(consensus_cube, sizes_3d);
     
     %{
@@ -18,7 +17,6 @@ function [labeled_image, super_pixel_cell] = kmeans_init(num_centroids, grad_wei
     consensus_cube = reshape(consensus_cube, sizes_3d);
     %Extra SVM Cruft Ends!
     %}
-    
     
     
     target_cube_size_copy = size(target_cube);
@@ -36,7 +34,6 @@ function [labeled_image, super_pixel_cell] = kmeans_init(num_centroids, grad_wei
     %ridiculous value so that all of them fall into a single
     %bucket upon the implementation of the graph cut algorithm
     target_cube(find(consensus_cube == 0)) = 100000000;
-    
     point_mapping = find(consensus_cube ~= 0);
     
    
@@ -54,7 +51,9 @@ function [labeled_image, super_pixel_cell] = kmeans_init(num_centroids, grad_wei
     target_points = horzcat(target_points, probability_data);
     
     %Including spatial information in KMeans. Not always done.
-    %target_points = horzcat(target_points, I, J)
+    spatial_data = horzcat(I, J, K);
+    spatial_data = spatial_data/max(max(spatial_data));
+    target_points = horzcat(target_points, spatial_data);
     
     %We want the behavior of KMeans to be deterministic. So we take
     %num_centroid evenly spaced points in the target_points input as our
@@ -63,13 +62,13 @@ function [labeled_image, super_pixel_cell] = kmeans_init(num_centroids, grad_wei
     kmeans_start_centroids = target_points(kmeans_start_indicies, :);
     
     [idx, c] = kmeans(target_points, num_centroids);
-   %[idx, c] = kmeans(target_points, [], 'start', kmeans_start_centroids);
+    %[idx, c] = kmeans(target_points, [], 'start', kmeans_start_centroids);
     
     %Plotting the kmeans clusters as a sanity  check!
     kmeans_cube = zeros(size(target_cube));
     kmeans_cube(point_mapping) = idx;
-    %kmeans_labels = kmeans_cube(:,:,20)
-    %imagesc(kmeans_labels); 
+    kmeans_labels = kmeans_cube(:,:,5)
+    imagesc(kmeans_labels); 
         
     super_pixel_cell = cell(1, num_centroids);
     
@@ -149,7 +148,9 @@ function [labeled_image, super_pixel_cell] = kmeans_init(num_centroids, grad_wei
     
     % show results
     
-    sample_slice = L(:,:,4);
+    %sample_slice = labeled_image(:,:,70);
+    
+    sample_slice = L(:,:,5);
     sample_slice = sample_slice + 1;
     imagesc(sample_slice);
     
@@ -170,7 +171,7 @@ function [labeled_image, super_pixel_cell] = kmeans_init(num_centroids, grad_wei
     
     %Save it?
     out = labeled_image;
-    dlmwrite('project_data/ad_hoc_cluster1.txt', labeled_image);
+    dlmwrite('project_data/target_cluster.txt', labeled_image);
     
     
     

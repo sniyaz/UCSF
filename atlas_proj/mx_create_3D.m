@@ -19,7 +19,7 @@ end
 
 function [out] = SCD(target_cube, atlas_cube_a, atlas_cube_b, i, j, k, radius)
     sum = 0;
-    beta = 1;
+    beta = 3;
     
     for y = i-radius:i+radius
         for x = j-radius:j+radius

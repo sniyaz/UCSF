@@ -19,7 +19,7 @@ end
 
 function [out] = SSD(target_image, atlas_image_a, atlas_image_b, y, x, radius)
     sum = 0;
-    beta = 1;
+    beta = 6;
     
     for i = x-radius:x+radius
         for j = y-radius:y+radius
