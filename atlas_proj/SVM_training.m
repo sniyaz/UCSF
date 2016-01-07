@@ -6,23 +6,29 @@ clear all
 sizes_3d = dlmread('project_data/sizes_ds.txt');
 num_centroids = 15;
 
-orig_image = dlmread('project_data/im1_ds.txt');
+orig_image = dlmread('project_data/static/target_ds.txt');
 orig_image = reshape(orig_image, sizes_3d);
 
-training_data1 = dlmread('project_data/gc_labeled_ds.txt');
+training_data1 = dlmread('project_data/atlas1_cluster.txt');
 training_data1 = reshape(training_data1, sizes_3d);
 
-training_data2 = dlmread('project_data/gc_labeled_ds.txt');
+training_data2 = dlmread('project_data/atlas2_cluster.txt');
 training_data2 = reshape(training_data2, sizes_3d);
 
-ground_truth1 = logical(dlmread('project_data/seg1_ds.txt'));
+training_data3 = dlmread('project_data/atlas3_cluster.txt');
+training_data3 = reshape(training_data3, sizes_3d);
+
+ground_truth1 = logical(dlmread('project_data/static/MT_seg1_orig_ds.txt'));
 ground_truth1 = reshape(ground_truth1, sizes_3d);
 
-ground_truth2 = logical(dlmread('project_data/seg2_ds.txt'));
+ground_truth2 = logical(dlmread('project_data/static/MT_seg2_orig_ds.txt'));
 ground_truth2 = reshape(ground_truth2, sizes_3d);
 
-labeled_cell = {training_data1, training_data2};
-ground_truth_cell = {ground_truth1, ground_truth2};
+ground_truth3 = logical(dlmread('project_data/static/MT_seg3_orig_ds.txt'));
+ground_truth3 = reshape(ground_truth3, sizes_3d);
+
+labeled_cell = {training_data1, training_data2, training_data3};
+ground_truth_cell = {ground_truth1, ground_truth2, ground_truth3};
 
 %Let the training begin! We will train three SVMs: one for seperating
 %border superpixels from non-border superpixels. Then two sub SVMs, one for
@@ -38,7 +44,7 @@ certain_super_voxel_labels = [];
 border_pixel_intensities = [];
 border_pixel_labels = [];
 
-for i = 1:1
+for i = 1:size(labeled_cell, 2)
     
     training_data = labeled_cell{i};
     ground_truth = ground_truth_cell{i};

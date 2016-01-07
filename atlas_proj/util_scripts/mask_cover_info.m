@@ -21,8 +21,8 @@ function [] = mask_cover_info()
     union_size = size(union(find(other_mask == 1), find(truth == 1)), 1);
     JI = intersect_size/union_size
     
-    slice1 = other_mask(:,:,76);
-    slice2 = truth(:,:,76);
+    slice1 = other_mask(:,:,73);
+    slice2 = truth(:,:,73);
     
     slice_intersect_size = size(intersect(find(slice1 == 1), find(slice2 == 1)), 1);
     slice_union_size = size(union(find(slice1 == 1), find(slice2 == 1)), 1);

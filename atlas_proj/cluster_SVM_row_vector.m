@@ -14,9 +14,9 @@ function [super_voxel_data] = cluster_SVM_row_vector(l, labeled_cube, target_cub
     avg_grad = mean(grad, 1);
     super_voxel_data = [super_voxel_data avg_grad];
     
-    %average spatial info dimension
-    spatial_info = points;
-    avg_spat = mean(spatial_info, 1);
-    super_voxel_data = [super_voxel_data avg_spat];
+%     %average spatial info dimension
+%     spatial_info = points;
+%     avg_spat = mean(spatial_info, 1);
+%     super_voxel_data = [super_voxel_data avg_spat];
 
 end

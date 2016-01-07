@@ -29,6 +29,9 @@
  * Outputs:
  *  gch - of type int32, graph cut handle - do NOT mess with it!
  */
+
+ /*SHERDIL NOTE: I have changed this constructor to use the absolute difference instead of Wpq = exp(-|C(p)-C(q)|)*/
+
 void mexFunction(
     int		  nlhs, 	/* number of expected outputs */
     mxArray	  *plhs[],	/* mxArray output pointer array */
@@ -106,49 +109,49 @@ void mexFunction(
                     /* all nodes with 3 nieghbors */
                     p = r+c*R+z*R*C;
                     q = r+1+c*R+z*R*C;
-                    MyGraph->setNeighbors(p, q, exp(-fabs(Contrast[p]-Contrast[q])));
+                    MyGraph->setNeighbors(p, q, (fabs(Contrast[p]-Contrast[q])));
                     q = r+(c+1)*R+z*R*C;
-                    MyGraph->setNeighbors(p, q, exp(-fabs(Contrast[p]-Contrast[q])));
+                    MyGraph->setNeighbors(p, q, (fabs(Contrast[p]-Contrast[q])));
                     q = r+c*R+(z+1)*R*C;
-                    MyGraph->setNeighbors(p, q, exp(-fabs(Contrast[p]-Contrast[q])));
+                    MyGraph->setNeighbors(p, q, (fabs(Contrast[p]-Contrast[q])));
                 }
                /* top of Z has 2 n in c and r */
                 p = r+c*R+z*R*C;
                 q = r+1+c*R+z*R*C;
-                MyGraph->setNeighbors(p, q, exp(-fabs(Contrast[p]-Contrast[q])));
+                MyGraph->setNeighbors(p, q, (fabs(Contrast[p]-Contrast[q])));
                 q = r+(c+1)*R+z*R*C;
-                MyGraph->setNeighbors(p, q, exp(-fabs(Contrast[p]-Contrast[q])));
+                MyGraph->setNeighbors(p, q, (fabs(Contrast[p]-Contrast[q])));
             }
             /* end of c has 2 n in z and r */
             for ( z = 0 ; z <= Z -2 ; z++ ) {
                 p = r+c*R+z*R*C;
                 q = r+1+c*R+z*R*C;
-                MyGraph->setNeighbors(p, q, exp(-fabs(Contrast[p]-Contrast[q])));
+                MyGraph->setNeighbors(p, q, (fabs(Contrast[p]-Contrast[q])));
                 q = r+c*R+(z+1)*R*C;
-                MyGraph->setNeighbors(p, q, exp(-fabs(Contrast[p]-Contrast[q])));
+                MyGraph->setNeighbors(p, q, (fabs(Contrast[p]-Contrast[q])));
             }
             /* end of c abd z has n in r */
             p = r+c*R+z*R*C;
             q = r+1+c*R+z*R*C;
-            MyGraph->setNeighbors(p, q, exp(-fabs(Contrast[p]-Contrast[q])));
+            MyGraph->setNeighbors(p, q, (fabs(Contrast[p]-Contrast[q])));
         }
         /* end of r has n in z and c */
         for ( c = 0 ; c <= C - 2; c++ ) {
             for ( z = 0 ; z <= Z - 2; z++ ) {
                 p = r+c*R+z*R*C;
                 q = r+c*R+(z+1)*R*C;
-                MyGraph->setNeighbors(p, q, exp(-fabs(Contrast[p]-Contrast[q])));
+                MyGraph->setNeighbors(p, q, (fabs(Contrast[p]-Contrast[q])));
                 q = r+(c+1)*R+z*R*C;
-                MyGraph->setNeighbors(p, q, exp(-fabs(Contrast[p]-Contrast[q])));
+                MyGraph->setNeighbors(p, q, (fabs(Contrast[p]-Contrast[q])));
             }
             p = r+c*R+z*R*C;
             q = r+(c+1)*R+z*R*C;
-            MyGraph->setNeighbors(p, q, exp(-fabs(Contrast[p]-Contrast[q])));
+            MyGraph->setNeighbors(p, q, (fabs(Contrast[p]-Contrast[q])));
         }
         for ( z = 0 ; z <= Z - 2; z++ ) {
             p = r+c*R+z*R*C;
             q = r+c*R+(z+1)*R*C;
-            MyGraph->setNeighbors(p, q, exp(-fabs(Contrast[p]-Contrast[q])));
+            MyGraph->setNeighbors(p, q, (fabs(Contrast[p]-Contrast[q])));
         }
         /* end of graph construction with contrast */
     } else {

@@ -49,6 +49,19 @@ function [out] = consensus_3d()
     im_1 = resize(im_1, [size(target, 1), size(target, 2), 221]);
     im_2 = resize(im_2, [size(target, 1), size(target, 2), 221]);
     im_3 = resize(im_3, [size(target, 1), size(target, 2), 221]);
+    
+    %Normalize all MRI intensities so the algorithm works fairly in
+    %calculating simialrity.
+    target = target/norm(target(:));
+    im_1 = im_1/norm(im_1(:));
+    im_2 = im_2/norm(im_2(:));
+    im_3 = im_3/norm(im_3(:));
+    
+    target = target*1000;
+    im_1 = im_1*1000;
+    im_2 = im_2*1000;
+    im_3 = im_3*1000;
+
 
     atlas_images = cell(1, 2);
     atlas_images{1} = im_1;
@@ -56,7 +69,14 @@ function [out] = consensus_3d()
     atlas_images{3} = im_3;
 
     %Run the core algorithm.
-    consensus_cube = core_algo_3D(target, atlas_images, atlas_seg, 2);
+    consensus_cube = core_algo_3D(target, atlas_images, atlas_seg, 6);
+    
+    thresholded = consensus_cube;
+    thresholded(find(consensus_cube >= 0.5)) = 1;
+    thresholded(find(consensus_cube < 0.5)) = 0;
+    thresholded = logical(thresholded);
+    thresholded = resize(thresholded, sizes_3d);
+    dlmwrite('project_data/static/target_consensus_threshold.txt', thresholded);
     
     %Need to downsample the consensus_cube to match the original MRI cube
     consensus_cube = resize(consensus_cube, sizes_3d);
@@ -69,10 +89,7 @@ function [out] = consensus_3d()
     %Save it?
     dlmwrite('project_data/static/target_consensus_ds.txt', consensus_cube);
     
-    thresholded = consensus_cube;
-    thresholded(find(consensus_cube >= 0.5)) = 1;
-    thresholded(find(consensus_cube < 0.5)) = 0;
-    dlmwrite('project_data/static/target_consensus_threshold.txt', thresholded);
+    
     
     imshow(consensus_cube(:,:,75), [])
     

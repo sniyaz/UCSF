@@ -24,8 +24,8 @@ function [JI] = cluster_eval(num_clusters)
     union_size = size(union(find(best_seg == 1), find(ground_truth == 1)), 1);
     JI = intersect_size/union_size
     
-    slice1 = best_seg(:,:,69);
-    slice2 = ground_truth(:,:,69);
+    slice1 = best_seg(:,:,72);
+    slice2 = ground_truth(:,:,72);
    
     slice_intersect_size = size(intersect(find(slice1 == 1), find(slice2 == 1)), 1);
     slice_union_size = size(union(find(slice1 == 1), find(slice2 == 1)), 1);

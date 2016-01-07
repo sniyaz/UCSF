@@ -5,10 +5,10 @@ close all
 
 sizes_3d = dlmread('project_data/sizes_ds.txt');
 
-target_cube = dlmread('project_data/target_ds.txt');
+target_cube = dlmread('project_data/static/target_ds.txt');
 target_cube = reshape(target_cube, sizes_3d);
 
-labeled_target = dlmread('project_data/gc_labeled_ds.txt');
+labeled_target = dlmread('project_data/target_cluster.txt');
 labeled_target = reshape(labeled_target, sizes_3d);
 
 final_mask = logical(zeros(size(target_cube)));
@@ -61,12 +61,14 @@ end
 
 load('project_data/border_case_svm.mat','border_case_svm');
 border_case_classification = svmclassify(border_case_svm, border_intensities);
-final_mask(border_points) = border_case_classification;
+final_mask(border_points) = border_case_classification;ls
 
 
 test_slice = target_cube(:,:,75);
 test_seg = final_mask(:,:,75);
 test_slice(~test_seg) = 0;
 imshow(test_slice, [])
+
+dlmwrite('project_data/SVM_mask.txt', final_mask);
 
 end

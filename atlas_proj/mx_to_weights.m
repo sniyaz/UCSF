@@ -2,7 +2,7 @@ function [weights] = mx_to_weights(mx_input)
     mx_size = size(mx_input, 1);
     
     %This is to test the alpha factor
-    alpha = 0.025;
+    alpha = 0.01;
     m_alpha = alpha*eye(mx_size);
     mx_input = mx_input + m_alpha;
     
